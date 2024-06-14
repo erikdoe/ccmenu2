@@ -61,8 +61,24 @@ struct MenuBarExtraMenu: View {
         case .sortedAlphabetically:
             return filtered.sorted(by: { $0.name.lowercased() < $1.name.lowercased() })
         case .sortedByBuildTime:
-            return filtered.sorted(by: { $0.status.lastBuild?.timestamp ?? Date.distantPast >
-                $1.status.lastBuild?.timestamp ?? Date.distantPast})
+            return filtered.sorted(by: {p1, p2 in
+				let r1 = p1.status.lastBuild?.result
+				let r2 = p2.status.lastBuild?.result
+				if (r1 != r2) {
+					if (r1 == nil) {
+						return false
+					}
+					else if (r2 == nil) {
+						return true
+					}
+					let resultOrder = [
+						BuildResult.failure, BuildResult.success,
+						BuildResult.unknown, BuildResult.other
+					]
+					return resultOrder.firstIndex(of: r1!)! < resultOrder.firstIndex(of: r2!)!
+				}
+				return p1.status.lastBuild?.timestamp ?? Date.distantFuture > p2.status.lastBuild?.timestamp ?? Date.distantFuture
+			})
         }
     }
 
